@@ -9,9 +9,10 @@ import { Bell, Calendar, Check, X } from 'lucide-react';
 interface DailyFeedProps {
     party: Party;
     onViewRecap: () => void;
+    onDecisionsUpdate?: (decisions: UserDecision[], news: NewsItem[]) => void;
 }
 
-export default function DailyFeed({ party, onViewRecap }: DailyFeedProps) {
+export default function DailyFeed({ party, onViewRecap, onDecisionsUpdate }: DailyFeedProps) {
     const [news, setNews] = useState<NewsItem[]>([]);
     const [currentIndex, setCurrentIndex] = useState(0);
     const [decisions, setDecisions] = useState<UserDecision[]>([]);
@@ -44,7 +45,13 @@ export default function DailyFeed({ party, onViewRecap }: DailyFeedProps) {
             timestamp: Date.now()
         };
 
-        setDecisions([...decisions, decision]);
+        const newDecisions = [...decisions, decision];
+        setDecisions(newDecisions);
+
+        // Notify parent component
+        if (onDecisionsUpdate) {
+            onDecisionsUpdate(newDecisions, news);
+        }
 
         setTimeout(() => {
             setCurrentIndex((prev) => prev + 1);
@@ -89,7 +96,7 @@ export default function DailyFeed({ party, onViewRecap }: DailyFeedProps) {
     }
 
     return (
-        <div className="w-full max-w-md mx-auto h-[600px] relative flex items-center justify-center">
+        <div className="w-full max-w-md mx-auto h-[750px] relative flex items-center justify-center">
             {/* Notification Toast */}
             <AnimatePresence>
                 {showNotification && (
@@ -130,12 +137,6 @@ export default function DailyFeed({ party, onViewRecap }: DailyFeedProps) {
 
             <div className="absolute bottom-0 w-full text-center pb-4">
                 <div className="text-gray-400 text-sm mb-2">Decision {currentIndex + 1} of {news.length}</div>
-                <button
-                    onClick={onViewRecap}
-                    className="text-xs text-indigo-600 font-semibold hover:underline"
-                >
-                    View Weekly Recap
-                </button>
             </div>
         </div>
     );

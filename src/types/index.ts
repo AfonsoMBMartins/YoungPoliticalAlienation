@@ -39,10 +39,39 @@ export interface NewsItem {
     date: string;
     tags: string[];
     url?: string;
+    rewrittenSummary?: string; // AI-rewritten version
+    rewrittenPrompt?: string; // AI-rewritten prompt
 }
 
 export interface UserDecision {
     newsId: string;
     decision: 'support' | 'oppose' | 'neutral';
     timestamp: number;
+}
+
+export interface AnalysisResult {
+    // New JSON format from OpenAI
+    Statement?: string;
+    partyMatches?: {
+        name: string;
+        matchPercentage: number;
+        explanation: string;
+    }[];
+    // Legacy fields for backward compatibility
+    summary?: string;
+    politicalTendencies?: string;
+    patterns?: string[];
+    partyAlignment?: {
+        name: string;
+        match: number;
+        color?: string;
+    }[];
+    allies?: string[];
+    whatThisMeans?: string;
+    politicalMatch?: {
+        party: string;
+        percentage: number;
+    }[];
+    rawResponse?: string;
+    error?: string;
 }

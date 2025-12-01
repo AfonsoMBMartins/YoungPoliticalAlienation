@@ -4,14 +4,32 @@ import { useState } from 'react';
 import OnboardingFlow from '@/components/onboarding/OnboardingFlow';
 import DailyFeed from '@/components/dashboard/DailyFeed';
 import WeeklyRecap from '@/components/results/WeeklyRecap';
-import { UserProfile, Party } from '@/types';
+import { UserProfile, Party, UserDecision, NewsItem } from '@/types';
 import { motion } from 'framer-motion';
 
 export default function Home() {
-  const [party, setParty] = useState<Party | null>(null);
+  // Test mode: skip onboarding if environment variable is set
+  const skipOnboarding = process.env.NEXT_PUBLIC_SKIP_ONBOARDING === 'true';
+
+  const mockParty: Party | null = skipOnboarding ? {
+    id: 'test-party-123',
+    name: 'Test Party',
+    emblem: '🧪',
+    description: 'A test party for development',
+    color: '#6366f1',
+    stats: {
+      members: 1000,
+      popularity: 50
+    },
+    history: []
+  } : null;
+
+  const [party, setParty] = useState<Party | null>(mockParty);
   const [loading, setLoading] = useState(false);
-  const [view, setView] = useState<'onboarding' | 'dashboard' | 'recap'>('onboarding');
+  const [view, setView] = useState<'onboarding' | 'dashboard' | 'recap'>(skipOnboarding ? 'dashboard' : 'onboarding');
   const [storedProfile, setStoredProfile] = useState<UserProfile | null>(null);
+  const [decisions, setDecisions] = useState<UserDecision[]>([]);
+  const [newsItems, setNewsItems] = useState<NewsItem[]>([]);
 
   const handleOnboardingComplete = async (profile: UserProfile) => {
     setLoading(true);
@@ -100,19 +118,27 @@ export default function Home() {
               <h1 className="font-bold text-gray-900">{party.name}</h1>
             </div>
           </div>
-          <div className="bg-white p-2 rounded-full shadow-sm">
-            <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 font-bold">
-              {party.name.charAt(0)}
-            </div>
-          </div>
+          <button
+            onClick={() => setView('recap')}
+            className="bg-white px-4 py-2 rounded-full shadow-sm text-indigo-600 font-bold text-sm hover:bg-indigo-50 transition-colors"
+          >
+            View Party
+          </button>
         </header>
-        <DailyFeed party={party} onViewRecap={() => setView('recap')} />
+        <DailyFeed
+          party={party}
+          onViewRecap={() => setView('recap')}
+          onDecisionsUpdate={(newDecisions, news) => {
+            setDecisions(newDecisions);
+            setNewsItems(news);
+          }}
+        />
       </main>
     );
   }
 
   if (view === 'recap' && party) {
-    return <WeeklyRecap party={party} onBack={() => setView('dashboard')} />;
+    return <WeeklyRecap party={party} decisions={decisions} newsItems={newsItems} onBack={() => setView('dashboard')} />;
   }
 
   return ( // This block now only renders if view is 'onboarding'
